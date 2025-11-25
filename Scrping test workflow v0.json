@@ -1,0 +1,173 @@
+{
+  "name": "Scrping test workflow v0",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "5733e3d4-e4ab-4da6-a78d-de39bba8767f",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://www.theverge.com/rss/index.xml",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "2710473e-fdae-473a-9894-368db87c962d",
+      "name": "RSS Read"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 函式：使用正規表達式移除所有 HTML 標籤及 HTML 實體\nfunction stripHtmlTags(html) {\n    // 匹配所有 <...> 格式的標籤並替換為空字串\n    if (!html) return '';\n    \n    // 移除 HTML 標籤\n    let plainText = html.replace(/<[^>]*>/g, '');\n    \n    // 移除常見的 HTML 實體 (如 &nbsp; 和 &#038;)\n    // 針對 ' (單引號) 和 \" (雙引號) 等常見實體進行替換\n    plainText = plainText.replace(/&nbsp;/g, ' ')\n                       .replace(/&#038;/g, '&')\n                       .replace(/&#8216;/g, '‘') // 左單引號\n                       .replace(/&#8217;/g, '’') // 右單引號\n                       .replace(/&apos;/g, \"'\")  // 單引號\n                       .replace(/&quot;/g, '\"')  // 雙引號\n                       .replace(/&amp;/g, '&')\n                       .replace(/&lt;/g, '<')\n                       .replace(/&gt;/g, '>');\n\n\n    // 移除連續的換行和空白，讓文本更乾淨\n    plainText = plainText.replace(/(\\r\\n|\\n|\\r)+/gm, ' ').trim();\n    \n    return plainText;\n}\n\n// 定義我們需要篩選的關鍵字\nconst keyword = \"AI\"; \n\n// 儲存符合條件的文章\nconst filteredItems = [];\n\n// n8n 的 $input.all() 遍歷 RSS Read 節點輸出的每一篇文章項目\nfor (const item of $input.all()) {\n    const article = item.json;\n\n    // RSS Read 節點會將 RSS 標籤轉換為 JSON 屬性\n    const rawTitle = article.title || '';\n    const url = article.link || ''; \n    \n    // 將原始標題轉換為純文字 (淨化 HTML 實體)\n    const title = stripHtmlTags(rawTitle);\n    \n    // 依序檢查多個可能的日期欄位名稱\n    const publishedDate = article.published || article.pubDate || article.date || '';\n    \n    // 嘗試獲取文章摘要/描述\n    const rawSummary = article.description || article.content || ''; \n    \n    // 將原始摘要轉換為純文字\n    const summary = stripHtmlTags(rawSummary);\n\n    // 篩選邏輯：只檢查 Title 中是否包含關鍵字\n    const keywordFoundInTitle = title.toUpperCase().includes(keyword.toUpperCase());\n    \n    // ⭐ 關鍵修改：keywordFound 現在只等於 keywordFoundInTitle\n    const keywordFound = keywordFoundInTitle; \n\n    // 確保標題和連結都存在，且關鍵字出現在標題中\n    if (title && url && keywordFound) {\n        \n        filteredItems.push({\n            json: {\n                // 輸出乾淨的欄位名稱\n                Title: title, // 使用淨化後的標題\n                URL: url,\n                Summary: summary,\n                PublishedDate: publishedDate \n            }\n        });\n    }\n}\n\n// 返回符合條件的 JSON 數據\nreturn filteredItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "fc65ccaf-acd7-4e1a-8ac1-e2f298426756",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1P4yu9JV17zXG5wbJu8jknGroktHk4AFFi0g1gcbrC5w",
+          "mode": "list",
+          "cachedResultName": "Scrap_test",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1P4yu9JV17zXG5wbJu8jknGroktHk4AFFi0g1gcbrC5w/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 825374595,
+          "mode": "list",
+          "cachedResultName": "工作表2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1P4yu9JV17zXG5wbJu8jknGroktHk4AFFi0g1gcbrC5w/edit#gid=825374595"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "URL",
+              "displayName": "URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Summary",
+              "displayName": "Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "PublishedDate",
+              "displayName": "PublishedDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        624,
+        0
+      ],
+      "id": "39ff1eee-2fa1-4fb0-8bc1-0cf91c482cb2",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "aUErYTFPtWckqFQ2",
+          "name": "Google Sheets account_Emily"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "91bd6792-39a9-47a1-99f4-4881059ff742",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fc9a9f8dcc9239b8f02a41de0b9d2a7f96e193f2cb25b6955be31626298181a4"
+  },
+  "id": "V420uZ5qF0VgbieY",
+  "tags": []
+}
